@@ -1,95 +1,97 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM), Server.
+# 📸 SnapFrame – Kotlin Multiplatform Image App
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+**SnapFrame** is a Kotlin Multiplatform application built with **Compose Multiplatform**, targeting **Android**, **iOS**, **Desktop**, and **Web**.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+The name **SnapFrame** comes from the core idea of the app:
 
-* [/server](./server/src/main/kotlin) is for the Ktor server application.
+- **Snap**: quickly pick or capture an image
+- **Frame**: crop, edit, preview, and prepare the final framed result
 
-* [/shared](./shared/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./shared/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
-
-### Build and Run Android Application
-
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
-
-### Build and Run Desktop (JVM) Application
-
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
-
-### Build and Run Server
-
-To build and run the development version of the server, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :server:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :server:run
-  ```
-
-### Build and Run Web Application
-
-To build and run the development version of the web app, use the run configuration from the run widget
-in your IDE's toolbar or run it directly from the terminal:
-- for the Wasm target (faster, modern browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-- for the JS target (slower, supports older browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:jsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:jsBrowserDevelopmentRun
-    ```
-
-### Build and Run iOS Application
-
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+SnapFrame focuses on a simple cross-platform image workflow, where the main UI is shared across platforms while platform-specific image APIs are implemented separately for Android and iOS.
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+## ✨ Features
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+- 📲 **Cross-platform support** using Kotlin Multiplatform
+- 🎨 **Shared UI** with Compose Multiplatform
+- 🤖 **Android image handling** using Android Bitmap, Photo Picker, and MediaStore
+- 🍏 **iOS image handling** using Skia and native Foundation APIs
+- 🖼️ **Image selection flow**
+- ✂️ **Image crop flow**
+- 🛠️ **Image edit flow**
+- 👀 **Image preview flow**
+- 💾 **Save image support**
+---
+## 📸 Demo
+### 🤖 Android
+
+The Android app can be built and run directly in the **Android Studio emulator**.
+
+[SnapFrame (Android Demo).webm](https://github.com/user-attachments/assets/f5b370c0-394c-4efd-8df6-0cb1c21d9dfb)
+
+
+### 🍏 iOS
+
+In the **Android Studio terminal**, from the same project folder, open the iOS project with:
+
+```bash
+open iosApp/iosApp.xcodeproj
+```
+
+https://github.com/user-attachments/assets/0f10fd50-6a47-41d8-8da8-f8d6cccfad9f
+
+
+
+
+## 🛠️ Project Setup
+
+SnapFrame was created with Kotlin Multiplatform Wizard and selected support for:
+
+- Android
+- iOS
+- Desktop
+- Web
+
+<img width="448" height="516" alt="image" src="https://github.com/user-attachments/assets/a2ec5c73-c7a9-404c-a64b-8df912cb5cd1" />
+
+---
+
+## Project Structure
+
+This is a Kotlin Multiplatform project using shared Compose Multiplatform UI.
+
+```text
+SnapFrame/
+├── composeApp/
+│   └── src/
+│       ├── commonMain/
+│       │   └── shared Compose UI and common business logic
+│       │
+│       ├── androidMain/
+│       │   └── Android-specific image picker, bitmap, and save logic
+│       │
+│       ├── iosMain/
+│       │   └── iOS-specific image picker and image processing logic
+│       │
+│       ├── desktopMain/
+│       │   └── Desktop-specific entry point and logic
+│       │
+│       └── webMain/
+│           └── Web-specific entry point and logic
+│
+├── iosApp/
+│   ├── iosApp.xcodeproj/
+│   └── iosApp/
+│       ├── ContentView.swift
+│       ├── iOSApp.swift
+│       └── Info.plist
+│
+├── gradle/
+│   └── wrapper/
+│
+├── build.gradle.kts
+├── settings.gradle.kts
+├── gradle.properties
+└── README.md
+
