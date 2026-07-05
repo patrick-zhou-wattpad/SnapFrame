@@ -47,7 +47,6 @@ sealed class SelectorCircleItem {
     ) : SelectorCircleItem()
 }
 
-
 @Composable
 fun GenericBottomSelectorPanel(
     modifier: Modifier,
@@ -126,7 +125,6 @@ fun GenericBottomSelectorPanel(
     }
 }
 
-
 @Composable
 private fun ColumnHeader(title: String) {
     Box(
@@ -142,7 +140,6 @@ private fun ColumnHeader(title: String) {
         )
     }
 }
-
 
 @Composable
 private fun AddCircle(

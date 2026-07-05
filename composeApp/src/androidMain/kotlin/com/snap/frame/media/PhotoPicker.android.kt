@@ -9,23 +9,35 @@ import androidx.compose.ui.platform.LocalContext
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
+private class PhotoPickerCallbackHolder {
+    var callback: ((ByteArray?) -> Unit)? = null
+}
+
 @Composable
 actual fun rememberPhotoPicker(): PhotoPicker {
     val context = LocalContext.current
     val resolver = context.contentResolver
 
-    var callback: ((ByteArray?) -> Unit)? = remember { null }
+    // Keeps the result callback stable across recompositions
+    val callbackHolder = remember {
+        PhotoPickerCallbackHolder()
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        callback?.invoke(readUriBytes(resolver, uri))
+        val bytes = readUriBytes(resolver, uri)
+
+        callbackHolder.callback?.invoke(bytes)
+        callbackHolder.callback = null
     }
 
-    return remember {
+    return remember(launcher) {
         object : PhotoPicker {
-            override fun pick(onResult: (ByteArray?) -> Unit) {
-                callback = onResult
+            override fun pick(
+                onResult: (ByteArray?) -> Unit
+            ) {
+                callbackHolder.callback = onResult
                 launcher.launch("image/*")
             }
         }
@@ -39,6 +51,7 @@ private fun readUriBytes(
     if (uri == null) return null
 
     val input: InputStream = resolver.openInputStream(uri) ?: return null
+
     return try {
         input.readAllBytesCompat()
     } finally {
