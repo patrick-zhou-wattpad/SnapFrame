@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.snap.frame.features.CropPhotoScreen
 import com.snap.frame.features.HomeScreen
+import com.snap.frame.features.studio.composable.StudioScreen
 import com.snap.frame.media.IOSPhotoSaver
 import com.snap.frame.media.b64Decode
 import com.snap.frame.media.b64Encode
