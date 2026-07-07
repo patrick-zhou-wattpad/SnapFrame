@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -15,14 +16,15 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 
-
-// Photo editing canvas
+// Displays the background and all editable overlay images
 @Composable
 internal fun PhotoEditorCanvas(
     backgroundImage: ImageBitmap,
-    overlayImage: ImageBitmap?,
+    overlays: List<OverlayPhoto>,
+    onOverlayTransformChange: (Long, OverlayTransform) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Track the actual canvas size for overlay positioning and resizing
     var canvasSize by remember {
         mutableStateOf(Size.Zero)
     }
@@ -37,6 +39,7 @@ internal fun PhotoEditorCanvas(
                 )
             }
     ) {
+        // Fill the canvas with the cropped background image
         Image(
             bitmap = backgroundImage,
             contentDescription = "Background photo",
@@ -44,15 +47,23 @@ internal fun PhotoEditorCanvas(
             modifier = Modifier.fillMaxSize()
         )
 
-        if (
-            overlayImage != null &&
-            canvasSize.width > 0f &&
-            canvasSize.height > 0f
-        ) {
-            EditableOverlayImage(
-                image = overlayImage,
-                canvasSize = canvasSize
-            )
+        // Draw each overlay in list order so newer overlays appear on top
+        if (canvasSize.width > 0f && canvasSize.height > 0f) {
+            overlays.forEach { overlay ->
+                key(overlay.id) {
+                    EditableOverlayImage(
+                        overlay = overlay,
+                        canvasSize = canvasSize,
+                        onTransformChange = { transform ->
+                            // Send the updated position and size back to StudioScreen
+                            onOverlayTransformChange(
+                                overlay.id,
+                                transform
+                            )
+                        }
+                    )
+                }
+            }
         }
     }
 }
