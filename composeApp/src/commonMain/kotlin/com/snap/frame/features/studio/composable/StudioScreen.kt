@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,34 +33,40 @@ import androidx.compose.ui.unit.sp
 import com.snap.frame.design.components.CustomSnackbarHost
 import com.snap.frame.design.components.IconTextButton
 import com.snap.frame.design.components.IconTitleRow
+import com.snap.frame.media.OverlayComposition
+import com.snap.frame.media.PhotoComposer
 import com.snap.frame.media.PhotoSaver
 import com.snap.frame.media.rememberPhotoPicker
 import com.snap.frame.media.toImageBitmap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import snapframe.composeapp.generated.resources.Res
 import snapframe.composeapp.generated.resources.arrow_left
 import snapframe.composeapp.generated.resources.download
 
-
-// Studio editor screen
 @Composable
 fun StudioScreen(
     photoBytes: ByteArray,
     onBack: () -> Unit,
-    photoSaver: PhotoSaver
+    photoSaver: PhotoSaver,
+    photoComposer: PhotoComposer
 ) {
     val imageBitmap = remember(photoBytes) {
         photoBytes.toImageBitmap()
     }
 
+    val backgroundAspectRatio =
+        imageBitmap.width.toFloat() / imageBitmap.height.toFloat()
+
     val photoPicker = rememberPhotoPicker()
 
-    var overlayPhotoBytes by remember {
-        mutableStateOf<ByteArray?>(null)
+    val overlays = remember {
+        mutableStateListOf<OverlayPhoto>()
     }
 
-    val overlayImageBitmap = remember(overlayPhotoBytes) {
-        overlayPhotoBytes?.toImageBitmap()
+    var nextOverlayId by remember {
+        mutableStateOf(0L)
     }
 
     val snackbarHostState = remember {
@@ -85,7 +92,6 @@ fun StudioScreen(
                 .padding(24.dp)
                 .padding(top = 24.dp)
         ) {
-            // Studio toolbar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -104,15 +110,47 @@ fun StudioScreen(
                     icon = Res.drawable.download,
                     text = "Save",
                     onClick = {
-                        photoSaver.savePhotoToAlbum(photoBytes) { success ->
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = if (success) {
-                                        "Photo saved successfully"
-                                    } else {
-                                        "Failed to save photo"
-                                    }
+                        val overlaySnapshot = overlays.map { overlay ->
+                            OverlayComposition(
+                                photoBytes = overlay.photoBytes,
+                                leftFraction =
+                                    overlay.transform.leftFraction,
+                                topFraction =
+                                    overlay.transform.topFraction,
+                                widthFraction =
+                                    overlay.transform.widthFraction
+                            )
+                        }
+
+                        scope.launch {
+                            val composedPhotoBytes = withContext(
+                                Dispatchers.Default
+                            ) {
+                                photoComposer.compose(
+                                    backgroundPhotoBytes = photoBytes,
+                                    overlays = overlaySnapshot
                                 )
+                            }
+
+                            if (composedPhotoBytes == null) {
+                                snackbarHostState.showSnackbar(
+                                    message = "Failed to save photo"
+                                )
+                                return@launch
+                            }
+
+                            photoSaver.savePhotoToAlbum(
+                                composedPhotoBytes
+                            ) { success ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = if (success) {
+                                            "Photo saved successfully"
+                                        } else {
+                                            "Failed to save photo"
+                                        }
+                                    )
+                                }
                             }
                         }
                     },
@@ -123,17 +161,12 @@ fun StudioScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Match canvas to photo ratio
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                val backgroundAspectRatio =
-                    imageBitmap.width.toFloat() /
-                        imageBitmap.height.toFloat()
-
                 val availableAspectRatio =
                     maxWidth.value / maxHeight.value
 
@@ -153,7 +186,18 @@ fun StudioScreen(
 
                 PhotoEditorCanvas(
                     backgroundImage = imageBitmap,
-                    overlayImage = overlayImageBitmap,
+                    overlays = overlays,
+                    onOverlayTransformChange = { id, transform ->
+                        val index = overlays.indexOfFirst {
+                            it.id == id
+                        }
+
+                        if (index >= 0) {
+                            overlays[index] = overlays[index].copy(
+                                transform = transform
+                            )
+                        }
+                    },
                     modifier = Modifier.size(
                         width = canvasWidth,
                         height = canvasHeight
@@ -163,12 +207,22 @@ fun StudioScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Add overlay picture
             ChooseOverlayPhotoButton(
                 onClick = {
                     photoPicker.pick { bytes ->
                         if (bytes != null) {
-                            overlayPhotoBytes = bytes
+                            val overlayImage = bytes.toImageBitmap()
+                            val initialTransform = createInitialOverlayTransform(
+                                backgroundAspectRatio = backgroundAspectRatio,
+                                overlayImage = overlayImage
+                            )
+
+                            overlays += OverlayPhoto(
+                                id = nextOverlayId++,
+                                photoBytes = bytes,
+                                image = overlayImage,
+                                transform = initialTransform
+                            )
                         }
                     }
                 }
@@ -176,7 +230,6 @@ fun StudioScreen(
         }
     }
 }
-
 
 // Overlay photo picker button
 @Composable
@@ -212,4 +265,3 @@ private fun ChooseOverlayPhotoButton(
         )
     }
 }
-
