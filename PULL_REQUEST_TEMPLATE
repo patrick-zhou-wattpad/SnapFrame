@@ -1,0 +1,52 @@
+### Issue / Task Details
+<!-- Provide the task link or 1-2 lines issue/task summary. -->
+
+### Solution Details
+<!-- Summarize the key changes in this PR with any additional context, if applicable. -->
+
+### Related Links (Optional)
+<!-- Provide the list of relevant links to issues, discussions, design or documentation, if applicable. -->
+
+### Type of Change(s)
+<!-- What type of changes does this PR introduce ? Put an `x` in all the boxes that apply. -->
+- [ ] Bug Fix
+- [ ] New/Existing Feature
+- [ ] Documentation
+- [ ] Code Refactoring
+- [ ] Script Improvement
+- [ ] Other: Please elaborate.
+
+### How have I tested this ?
+<!-- Provide instructions on how you have tested this change. Put an `x` in all the boxes that apply. -->
+- [ ] Manual Testing
+  - [ ] Not Applicable (no UI changes)
+  - [ ] Screenshot in Light Mode attached
+  - [ ] Screenshot in Dark Mode attached
+- [ ] Unit Testing
+- [ ] Other: Please elaborate
+
+### Test Scenarios
+<!-- Provide one or more test scenarios to test the PR -->
+
+### Test Screenshots/Video
+<!-- Provide any test artifacts of the PR after testing -->
+
+| **<Before-Screenshot 1 Title>** | **<After-Screenshot 2 Title>** |
+| ------------- | ------------- |
+| <image 1 (drag-drop or copy-paste)> | <image 2 (drag-drop or copy-paste)>  |
+
+### Known Issues
+<!-- List down any known issues or provide Jira link, if applicable -->
+
+### Clean Delivery Checklist
+<!-- It's not mandatory to check off all items on this list, Check only the conditions this PR meets
+or that applies. This will help us track our progress towards clean delivery. -->
+
+- [ ] (Optional) User interfaces are accessibility-enabled
+- [ ] No commented out code.
+- [ ] No fixable IDE warnings in new files
+- [ ] No Detekt & Ktlint error.
+- [ ] Unit tests for new code (for everything listed in [what we test](../blob/master/docs/best-practices/unit-tests.md#what-do-we-test))
+
+### Note
+PR ideally be less than 300 lines. If PR is more than that, Reviewer may reject PR and suggest to split the PR if Reviewer finds it possible to reduce it.
