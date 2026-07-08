@@ -42,38 +42,21 @@ SnapFrame uses a shared Compose Multiplatform UI while platform-specific image A
 - 👀 **Preview artwork placement in the selected room**
 - 💾 **Compose and save the final image with all artwork overlays**
 
-
 ---
 
 
 ## 📸 Demo
+| 🤖 Android | 🍏 iOS |
+|---|---|
+| <video src="https://github.com/user-attachments/assets/9554fdce-c18b-4f8c-80ca-e0a63326d667" controls></video> | <video src="https://github.com/user-attachments/assets/c055a329-8a62-4f2b-9078-c831c5800682" controls></video> |
 
-
-### 🤖 Android
-
-
-The Android app can be built and run directly in the **Android Studio emulator**.
-
-
-[SnapFrame (Android Demo).webm](https://github.com/user-attachments/assets/f5b370c0-394c-4efd-8df6-0cb1c21d9dfb)
-
-
-### 🍏 iOS
-
-
-In the **Android Studio terminal**, from the same project folder, open the iOS project with:
-
-
+note:
+ - Android app can be built and run directly in the **Android Studio emulator**.
+ - iOS app need open the iOS project in the  same project folder:
 ```bash
 open iosApp/iosApp.xcodeproj
 ```
-
-
-https://github.com/user-attachments/assets/0f10fd50-6a47-41d8-8da8-f8d6cccfad9f
-
-
 ---
-
 
 ## 🛠️ Project Setup
 
