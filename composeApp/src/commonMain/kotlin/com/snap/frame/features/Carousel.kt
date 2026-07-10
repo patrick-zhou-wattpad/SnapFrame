@@ -1,7 +1,17 @@
 package com.snap.frame.features
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
@@ -9,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,45 +31,68 @@ import kotlinx.coroutines.delay
 fun AutoCarousel(
     itemCount: Int,
     modifier: Modifier = Modifier,
-    autoScrollEnabled: Boolean = false,
+    autoScrollEnabled: Boolean = true,
     autoScrollIntervalMs: Long = 3_000L,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    pageSpacing: Dp = 0.dp,
     dotsPaddingTop: Dp = 10.dp,
     pageContent: @Composable (itemIndex: Int) -> Unit
 ) {
-    val virtualCount = Int.MAX_VALUE
-    val startPage = virtualCount / 2 - (virtualCount / 2) % itemCount
+    if (itemCount <= 0) return
 
+    // Use virtual pages to support circular manual scrolling.
+    //2147483647
+    val virtualPageCount = Int.MAX_VALUE / 1000
+    val initialPage = virtualPageCount / 2 -
+        (virtualPageCount / 2) % itemCount
+
+    // Tracks the current virtual pager position.
     val pagerState = rememberPagerState(
-        initialPage = startPage,
-        pageCount = { virtualCount }
+        initialPage = initialPage,
+        pageCount = { virtualPageCount }
     )
 
-    LaunchedEffect(pagerState.currentPage, autoScrollEnabled) {
-        if (!autoScrollEnabled) return@LaunchedEffect
+    // Pause auto-scroll while the user is dragging.
+    val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
+
+    // Auto-scroll after each page settles.
+    LaunchedEffect(
+        autoScrollEnabled,
+        isDragged,
+        pagerState.settledPage,
+        autoScrollIntervalMs,
+        itemCount
+    ) {
+        if (!autoScrollEnabled || isDragged || itemCount <= 1) {
+            return@LaunchedEffect
+        }
+
         delay(autoScrollIntervalMs)
-        if (pagerState.isScrollInProgress) return@LaunchedEffect
-        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+
+        if (!pagerState.isScrollInProgress) {
+            pagerState.animateScrollToPage(
+                pagerState.settledPage + 1
+            )
+        }
     }
 
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Displays one full carousel page at a time.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f, fill = true)
+                .weight(1f)
         ) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
                 pageSize = PageSize.Fill,
-                contentPadding = contentPadding,
-                pageSpacing = pageSpacing
+                contentPadding = PaddingValues(0.dp),
+                pageSpacing = 0.dp
             ) { page ->
                 val itemIndex = page % itemCount
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -72,14 +106,14 @@ fun AutoCarousel(
 
         Spacer(Modifier.height(dotsPaddingTop))
 
+        // Displays the current real page indicator.
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val currentIndex = pagerState.currentPage % itemCount
+            val currentIndex = pagerState.settledPage % itemCount
 
-            var index = 0
-            while (index < itemCount) {
+            repeat(itemCount) { index ->
                 Box(
                     modifier = Modifier
                         .size(
@@ -88,13 +122,16 @@ fun AutoCarousel(
                         )
                         .clip(RoundedCornerShape(4.dp))
                         .background(
-                            if (index == currentIndex)
+                            if (index == currentIndex) {
                                 MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(
+                                    // 35% opaque or 65% transparent
+                                    alpha = 0.35f
+                                )
+                            }
                         )
                 )
-                index++
             }
         }
     }

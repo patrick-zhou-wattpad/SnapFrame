@@ -55,11 +55,8 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp),
-            contentPadding = PaddingValues(0.dp),
-            autoScrollEnabled = false,
             itemCount = carouselImages.size,
-            autoScrollIntervalMs = 1_000L,
-            pageSpacing = 12.dp
+            autoScrollIntervalMs = 2_000L,
         ) { page ->
             Image(
                 painter = painterResource(carouselImages[page]),
