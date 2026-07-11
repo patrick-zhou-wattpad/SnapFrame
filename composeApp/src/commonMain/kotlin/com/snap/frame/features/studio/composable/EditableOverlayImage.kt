@@ -1,15 +1,21 @@
 package com.snap.frame.features.studio.composable
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -19,24 +25,38 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-// Movable and resizable overlay
+/**
+ * Displays one overlay image and handles its edit actions:
+ *  - tap to select
+ *  - drag to move
+ *  - corner drag to resize
+ *  - long press to remove
+ */
 @Composable
 internal fun EditableOverlayImage(
     overlay: OverlayPhoto,
     canvasSize: Size,
+    isSelected: Boolean,
+    showRemoveButton: Boolean,
+    onSelect: () -> Unit,
+    onShowRemove: () -> Unit,
+    onRemove: () -> Unit,
     onTransformChange: (OverlayTransform) -> Unit
 ) {
     val density = LocalDensity.current
 
+    // Keep the latest transform value inside gesture callbacks
     val currentTransform by rememberUpdatedState(overlay.transform)
 
     val imageAspectRatio =
         overlay.image.width.toFloat() / overlay.image.height.toFloat()
 
+    // Convert normalized transform values into actual canvas pixels
     val overlayWidth =
         canvasSize.width * overlay.transform.widthFraction
 
@@ -65,9 +85,25 @@ internal fun EditableOverlayImage(
                 height = with(density) { overlayHeight.toDp() }
             )
             .border(
-                width = 1.dp,
-                color = Color.White
+                width = if (isSelected) 2.dp else 1.dp,
+                color = if (isSelected) {
+                    Color.White
+                } else {
+                    Color.White.copy(alpha = 0.7f)
+                }
             )
+            // Tap selects the overlay; long press shows the remove button
+            .pointerInput(overlay.id) {
+                detectTapGestures(
+                    onTap = {
+                        onSelect()
+                    },
+                    onLongPress = {
+                        onSelect()
+                        onShowRemove()
+                    }
+                )
+            }
     ) {
         Image(
             bitmap = overlay.image,
@@ -75,6 +111,7 @@ internal fun EditableOverlayImage(
             contentScale = ContentScale.FillBounds,
             modifier = Modifier
                 .fillMaxSize()
+                // Drag moves the overlay or resizes it from a corner
                 .pointerInput(
                     overlay.id,
                     canvasSize,
@@ -88,6 +125,10 @@ internal fun EditableOverlayImage(
 
                     detectDragGestures(
                         onDragStart = { touchOffset ->
+                            // Select this overlay before editing
+                            onSelect()
+
+                            // Save the starting state for this drag gesture
                             dragStartTransform = currentTransform
 
                             val startWidth =
@@ -118,6 +159,7 @@ internal fun EditableOverlayImage(
                                 ) * CORNER_TOUCH_RATIO
                             )
 
+                            // Decide whether this drag is move or corner resize
                             gestureMode = detectOverlayGestureMode(
                                 touchOffset = touchOffset,
                                 overlaySize = dragStartSize,
@@ -129,6 +171,7 @@ internal fun EditableOverlayImage(
 
                             totalDrag += dragAmount
 
+                            // Move overlay inside the canvas
                             if (gestureMode == OverlayGestureMode.MOVE) {
                                 val newOffset = calculateMoveOffset(
                                     startOffset = dragStartOffset,
@@ -149,6 +192,7 @@ internal fun EditableOverlayImage(
                                 return@detectDragGestures
                             }
 
+                            // Resize overlay while preserving its aspect ratio
                             val widthDelta = calculateResizeWidthDelta(
                                 gestureMode = gestureMode,
                                 dragAmount = totalDrag,
@@ -192,6 +236,7 @@ internal fun EditableOverlayImage(
                                 newHeight = newHeight
                             )
 
+                            // Save the new normalized position and size
                             onTransformChange(
                                 OverlayTransform(
                                     leftFraction =
@@ -206,5 +251,37 @@ internal fun EditableOverlayImage(
                     )
                 }
         )
+
+        // Show the remove button only after long press
+        if (showRemoveButton) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(
+                        x = (-6).dp,
+                        y = 6.dp
+                    )
+                    .size(28.dp)
+                    .background(
+                        color = Color.White,
+                        shape = CircleShape
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color.Black,
+                        shape = CircleShape
+                    )
+                    .clickable {
+                        onRemove()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "×",
+                    color = Color.Black,
+                    fontSize = 20.sp
+                )
+            }
+        }
     }
 }

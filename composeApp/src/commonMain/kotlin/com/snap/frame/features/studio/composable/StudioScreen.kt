@@ -61,6 +61,7 @@ fun StudioScreen(
 
     val photoPicker = rememberPhotoPicker()
 
+    // Store all overlay images in drawing order
     val overlays = remember {
         mutableStateListOf<OverlayPhoto>()
     }
@@ -69,11 +70,36 @@ fun StudioScreen(
         mutableStateOf(0L)
     }
 
+    // Track which overlay is currently selected
+    var selectedOverlayId by remember {
+        mutableStateOf<Long?>(null)
+    }
+
+    // Track which overlay should show the remove button
+    var overlayRemoveMenuId by remember {
+        mutableStateOf<Long?>(null)
+    }
+
     val snackbarHostState = remember {
         SnackbarHostState()
     }
 
     val scope = rememberCoroutineScope()
+
+    // Select overlay and bring it to the top layer
+    fun selectOverlay(id: Long) {
+        selectedOverlayId = id
+        overlayRemoveMenuId = null
+
+        val index = overlays.indexOfFirst {
+            it.id == id
+        }
+
+        if (index >= 0 && index != overlays.lastIndex) {
+            val selectedOverlay = overlays.removeAt(index)
+            overlays.add(selectedOverlay)
+        }
+    }
 
     Scaffold(
         snackbarHost = {
@@ -110,19 +136,18 @@ fun StudioScreen(
                     icon = Res.drawable.download,
                     text = "Save",
                     onClick = {
+                        // Convert editor overlays into save/export data
                         val overlaySnapshot = overlays.map { overlay ->
                             OverlayComposition(
                                 photoBytes = overlay.photoBytes,
-                                leftFraction =
-                                    overlay.transform.leftFraction,
-                                topFraction =
-                                    overlay.transform.topFraction,
-                                widthFraction =
-                                    overlay.transform.widthFraction
+                                leftFraction = overlay.transform.leftFraction,
+                                topFraction = overlay.transform.topFraction,
+                                widthFraction = overlay.transform.widthFraction
                             )
                         }
 
                         scope.launch {
+                            // Compose background + overlays into final image bytes
                             val composedPhotoBytes = withContext(
                                 Dispatchers.Default
                             ) {
@@ -139,6 +164,7 @@ fun StudioScreen(
                                 return@launch
                             }
 
+                            // Save the final composed image
                             photoSaver.savePhotoToAlbum(
                                 composedPhotoBytes
                             ) { success ->
@@ -170,6 +196,7 @@ fun StudioScreen(
                 val availableAspectRatio =
                     maxWidth.value / maxHeight.value
 
+                // Keep the canvas matched to the background image ratio
                 val canvasWidth =
                     if (availableAspectRatio > backgroundAspectRatio) {
                         maxHeight * backgroundAspectRatio
@@ -187,7 +214,31 @@ fun StudioScreen(
                 PhotoEditorCanvas(
                     backgroundImage = imageBitmap,
                     overlays = overlays,
+                    selectedOverlayId = selectedOverlayId,
+                    overlayRemoveMenuId = overlayRemoveMenuId,
+                    onOverlaySelected = { id ->
+                        selectOverlay(id)
+                    },
+                    onOverlayShowRemove = { id ->
+                        selectOverlay(id)
+                        overlayRemoveMenuId = id
+                    },
+                    onOverlayRemove = { id ->
+                        // Remove overlay from canvas and save data
+                        overlays.removeAll {
+                            it.id == id
+                        }
+
+                        if (selectedOverlayId == id) {
+                            selectedOverlayId = null
+                        }
+
+                        if (overlayRemoveMenuId == id) {
+                            overlayRemoveMenuId = null
+                        }
+                    },
                     onOverlayTransformChange = { id, transform ->
+                        // Update selected overlay position and size
                         val index = overlays.indexOfFirst {
                             it.id == id
                         }
@@ -212,17 +263,24 @@ fun StudioScreen(
                     photoPicker.pick { bytes ->
                         if (bytes != null) {
                             val overlayImage = bytes.toImageBitmap()
+
                             val initialTransform = createInitialOverlayTransform(
                                 backgroundAspectRatio = backgroundAspectRatio,
                                 overlayImage = overlayImage
                             )
 
+                            val newOverlayId = nextOverlayId++
+
+                            // Add new overlay and select it immediately
                             overlays += OverlayPhoto(
-                                id = nextOverlayId++,
+                                id = newOverlayId,
                                 photoBytes = bytes,
                                 image = overlayImage,
                                 transform = initialTransform
                             )
+
+                            selectedOverlayId = newOverlayId
+                            overlayRemoveMenuId = null
                         }
                     }
                 }
@@ -230,6 +288,7 @@ fun StudioScreen(
         }
     }
 }
+
 
 // Overlay photo picker button
 @Composable

@@ -21,6 +21,11 @@ import androidx.compose.ui.layout.onSizeChanged
 internal fun PhotoEditorCanvas(
     backgroundImage: ImageBitmap,
     overlays: List<OverlayPhoto>,
+    selectedOverlayId: Long?,
+    overlayRemoveMenuId: Long?,
+    onOverlaySelected: (Long) -> Unit,
+    onOverlayShowRemove: (Long) -> Unit,
+    onOverlayRemove: (Long) -> Unit,
     onOverlayTransformChange: (Long, OverlayTransform) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -47,15 +52,25 @@ internal fun PhotoEditorCanvas(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Draw each overlay in list order so newer overlays appear on top
+        // Draw each overlay in list order so newer/selected overlays appear on top
         if (canvasSize.width > 0f && canvasSize.height > 0f) {
             overlays.forEach { overlay ->
                 key(overlay.id) {
                     EditableOverlayImage(
                         overlay = overlay,
                         canvasSize = canvasSize,
+                        isSelected = overlay.id == selectedOverlayId,
+                        showRemoveButton = overlay.id == overlayRemoveMenuId,
+                        onSelect = {
+                            onOverlaySelected(overlay.id)
+                        },
+                        onShowRemove = {
+                            onOverlayShowRemove(overlay.id)
+                        },
+                        onRemove = {
+                            onOverlayRemove(overlay.id)
+                        },
                         onTransformChange = { transform ->
-                            // Send the updated position and size back to StudioScreen
                             onOverlayTransformChange(
                                 overlay.id,
                                 transform
