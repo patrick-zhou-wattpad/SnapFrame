@@ -31,9 +31,9 @@
 ### Test Screenshots/Video
 <!-- Provide any test artifacts of the PR after testing -->
 
-| **<Before-Screenshot 1 Title>** | **<After-Screenshot 2 Title>** |
-| ------------- | ------------- |
-| <image 1 (drag-drop or copy-paste)> | <image 2 (drag-drop or copy-paste)>  |
+| Android Demo | iOS Demo |
+|---|---|
+| <video src="" controls></video> | <video src="" controls></video> |
 
 ### Known Issues
 <!-- List down any known issues or provide Jira link, if applicable -->
