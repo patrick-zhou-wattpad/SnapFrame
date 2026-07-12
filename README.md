@@ -48,7 +48,7 @@ SnapFrame uses a shared Compose Multiplatform UI while platform-specific image A
 ## 📸 Demo
 | 🤖 Android | 🍏 iOS |
 |---|---|
-| <video src="https://github.com/user-attachments/assets/9554fdce-c18b-4f8c-80ca-e0a63326d667" controls></video> | <video src="https://github.com/user-attachments/assets/c055a329-8a62-4f2b-9078-c831c5800682" controls></video> |
+| <video src="https://github.com/user-attachments/assets/301d1ccb-4757-4f5f-8dd9-7a85450ecb7b" controls></video> | <video src="https://github.com/user-attachments/assets/06882039-271c-40cb-9eb4-f5c37a723991" controls></video> |
 
 note:
  - Android app can be built and run directly in the **Android Studio emulator**.
@@ -57,6 +57,7 @@ note:
 open iosApp/iosApp.xcodeproj
 ```
 ---
+
 
 ## 🛠️ Project Setup
 
